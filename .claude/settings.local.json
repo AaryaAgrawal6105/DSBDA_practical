@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s https://dlcdn.apache.org/hbase/)",
+      "Bash(curl -s https://dlcdn.apache.org/hive/)",
+      "Bash(curl -sI https://archive.apache.org/dist/hive/hive-2.3.9/apache-hive-2.3.9-bin.tar.gz)"
+    ]
+  }
+}
