@@ -1,0 +1,68 @@
+import pandas as pd
+import numpy as np
+
+from scipy.stats import zscore
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load dataset
+df = pd.read_csv("Iris.csv", header=None) # Load without header
+# Assign column names
+df.columns = ['sepal.length', 'sepal.width', 'petal.length', 'petal.width', 'variety']
+
+# Data Cleaning
+df.replace("?", np.nan, inplace=True)
+df.dropna(inplace=True)
+
+# Remove negative values
+cols = ['sepal.length','sepal.width','petal.length','petal.width']
+for col in cols:
+    df = df[df[col] >= 0]
+
+# Remove outliers using Z-score
+z = np.abs(zscore(df[cols]))
+df = df[(z < 3).all(axis=1)]
+
+# Data Transformation
+scaler = StandardScaler()
+df[cols] = scaler.fit_transform(df[cols])
+
+# Encode target column
+encoder = LabelEncoder()
+df['variety'] = encoder.fit_transform(df['variety'])
+
+# Features and target
+X = df[cols]
+y = df['variety']
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# Logistic Regression
+lr = LogisticRegression()
+lr.fit(X_train, y_train)
+lr_pred = lr.predict(X_test)
+
+# Naive Bayes
+nb = GaussianNB()
+nb.fit(X_train, y_train)
+nb_pred = nb.predict(X_test)
+
+# Accuracy
+print("Logistic Regression Accuracy:",
+      accuracy_score(y_test, lr_pred))
+
+print("Naive Bayes Accuracy:",
+      accuracy_score(y_test, nb_pred))
+
+# Reports
+print("\nLogistic Regression Report:\n",
+      classification_report(y_test, lr_pred))
+
+print("\nNaive Bayes Report:\n",
+      classification_report(y_test, nb_pred))

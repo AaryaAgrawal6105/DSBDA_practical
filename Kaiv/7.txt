@@ -1,0 +1,129 @@
+Hive Commands
+
+Start Hive:
+
+hive
+
+⸻
+
+Create Tables
+
+create table customer_info(
+Cust_ID int,
+Cust_Name string,
+OrderID int)
+row format delimited
+fields terminated by ',';
+create table order_info(
+OrderID int,
+ItemID int,
+Quantity int)
+row format delimited
+fields terminated by ',';
+create table item_info(
+ItemID int,
+ItemName string,
+ItemPrice double)
+row format delimited
+fields terminated by ',';
+
+⸻
+
+Load Data
+
+load data local inpath '/home/cloudera/customer.csv' into table customer_info;
+load data local inpath '/home/cloudera/order.csv' into table order_info;
+load data local inpath '/home/cloudera/item.csv' into table item_info;
+
+⸻
+
+Join Tables
+
+select * from customer_info c
+join order_info o on c.OrderID=o.OrderID
+join item_info i on o.ItemID=i.ItemID;
+
+⸻
+
+Create Index
+
+create index cust_index
+on table customer_info(Cust_Name)
+as 'compact'
+with deferred rebuild;
+
+⸻
+
+Total and Average Sales
+
+select
+sum(ItemPrice*Quantity) as total_sales,
+avg(ItemPrice*Quantity) as avg_sales
+from order_info o
+join item_info i
+on o.ItemID=i.ItemID;
+
+Example:
+
+\text{Total Sales}=75373
+
+\text{Average Sales}=7537.3
+
+⸻
+
+Maximum Cost Order
+
+select max(total_cost)
+from(
+select sum(ItemPrice*Quantity) as total_cost
+from order_info o
+join item_info i
+on o.ItemID=i.ItemID
+group by o.OrderID
+) t;
+
+Result:
+
+\text{Maximum Cost}=15996
+
+⸻
+
+HBase Commands
+
+Start HBase:
+
+hbase shell
+
+⸻
+
+Create HBase Table
+
+create 'CustomerInfo','Customer'
+
+⸻
+
+Hive to HBase Connection
+
+create external table customer_hbase(
+Cust_ID int,
+Cust_Name string,
+OrderID int)
+stored by 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+with serdeproperties(
+"hbase.columns.mapping"=
+":key,Customer:cust_name,Customer:order_id")
+tblproperties("hbase.table.name"="CustomerInfo");
+
+⸻
+
+Insert Data into HBase
+
+insert into table customer_hbase
+select * from customer_info;
+
+⸻
+
+Display HBase Records
+
+list
+scan 'CustomerInfo'

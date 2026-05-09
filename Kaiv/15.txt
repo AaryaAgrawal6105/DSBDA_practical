@@ -1,0 +1,66 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, classification_report
+
+# Define column names based on the Wisconsin Breast Cancer (Original) dataset
+column_names = ['id', 'clump_thickness', 'uniformity_cell_size', 'uniformity_cell_shape',
+                'marginal_adhesion', 'single_epithelial_cell_size', 'bare_nuclei',
+                'bland_chromatin', 'normal_nucleoli', 'mitoses', 'diagnosis']
+
+# Load dataset with no header and assign column names
+df = pd.read_csv("BreastCancerWc.csv", header=None, names=column_names)
+
+# Data Cleaning
+df.replace("?", np.nan, inplace=True)
+df.dropna(inplace=True)
+
+# Remove negative values
+num_cols = df.select_dtypes(include=np.number).columns
+df = df[(df[num_cols] >= 0).all(axis=1)]
+
+# Data Transformation
+df['diagnosis'] = df['diagnosis'].map({2:0, 4:1})
+
+# The previous outlier removal using IQR was too aggressive and removed all samples of one class.
+# Removing this step to ensure both classes are present for model training.
+
+X = df.drop(['id', 'diagnosis'], axis=1)
+y = df['diagnosis']
+
+# Feature Scaling
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Logistic Regression
+lr = LogisticRegression(max_iter=3000)
+lr.fit(X_train, y_train)
+lr_pred = lr.predict(X_test)
+
+# Naive Bayes
+nb = GaussianNB()
+nb.fit(X_train, y_train)
+nb_pred = nb.predict(X_test)
+
+# Accuracy
+print("Logistic Regression Accuracy:",
+      accuracy_score(y_test, lr_pred))
+
+print("Naive Bayes Accuracy:",
+      accuracy_score(y_test, nb_pred))
+
+# Reports
+print("\nLogistic Regression Report:\n",
+      classification_report(y_test, lr_pred))
+
+print("\nNaive Bayes Report:\n",
+      classification_report(y_test, lr_pred))

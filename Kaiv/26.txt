@@ -1,0 +1,72 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+
+# Define column names based on the dataset description
+column_names = ['class', 'age', 'sex', 'steroid', 'antivirals', 'fatigue', 'malaise', 'anorexia', 'liver_big', 'liver_firm', 'spleen_palpable', 'spiders', 'ascites', 'varices', 'bilirubin', 'alk_phosphate', 'sgot', 'albumin', 'protime', 'histology']
+
+# Load dataset, explicitly specifying no header and providing column names
+df = pd.read_csv("hepatitis.csv", header=None, names=column_names)
+
+# q) Data Cleaning
+# Remove ?, NA and negative values
+
+df.replace('?', np.nan, inplace=True)
+df.dropna(inplace=True)
+
+num_cols = ['bilirubin', 'alk_phosphate', 'sgot', 'albumin', 'protime']
+
+for col in num_cols:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+df = df[(df[num_cols] >= 0).all(axis=1)]
+
+# r) Remove Outliers using IQR
+
+for col in num_cols:
+    Q1 = df[col].quantile(0.25)
+    Q3 = df[col].quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower = Q1 - 1.5 * IQR
+    upper = Q3 + 1.5 * IQR
+
+    df = df[(df[col] >= lower) & (df[col] <= upper)]
+
+# s) Data Transformation
+# Encode categorical columns
+
+for col in df.columns:
+    if df[col].dtype == 'object' or df[col].dtype == 'bool':
+        df[col] = LabelEncoder().fit_transform(df[col].astype(str))
+
+# t) Build Models
+
+X = df.drop('class', axis=1)
+y = df['class']
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Logistic Regression
+lr = LogisticRegression(max_iter=1000)
+lr.fit(X_train, y_train)
+pred_lr = lr.predict(X_test)
+
+# Naive Bayes
+nb = GaussianNB()
+nb.fit(X_train, y_train)
+pred_nb = nb.predict(X_test)
+
+# Accuracy
+print("Logistic Regression Accuracy:",
+      accuracy_score(y_test, pred_lr))
+
+print("Naive Bayes Accuracy:",
+      accuracy_score(y_test, pred_nb))

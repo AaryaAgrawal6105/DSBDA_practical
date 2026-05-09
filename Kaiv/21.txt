@@ -1,0 +1,45 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load dataset
+column_names = ['age', 'workclass', 'fnlwgt', 'education', 'educational-num', 'marital-status', 'occupation', 'relationship', 'race', 'gender', 'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'income']
+df = pd.read_csv("adult.csv", header=None, names=column_names)
+
+# Clean data
+df.replace('?', pd.NA, inplace=True)
+df.dropna(inplace=True)
+
+# f) Histogram
+# Objective: Show age distribution
+sns.histplot(df['age'], bins=20, kde=True)
+plt.title("Histogram of Age")
+plt.show()
+
+# g) Dot Plot
+# Objective: Compare education level by income
+sns.stripplot(x='income', y='educational-num', data=df)
+plt.title("Dot Plot: Education vs Income")
+plt.show()
+
+# h) Bar Plot
+# Objective: Count people in each workclass
+sns.countplot(x='workclass', data=df)
+plt.xticks(rotation=90)
+plt.title("Bar Plot of Workclass")
+plt.show()
+
+# i) Line Chart
+# Objective: Show average working hours by age
+group = df.groupby('age')['hours-per-week'].mean()
+
+plt.plot(group.index, group.values)
+plt.title("Age vs Average Working Hours")
+plt.xlabel("Age")
+plt.ylabel("Hours per Week")
+plt.show()
+
+# j) Scatter + Histogram + Box Plot
+# Objective: Show relation and distribution of age & working hours
+sns.jointplot(data=df, x='age', y='hours-per-week', kind='scatter')
+plt.show()

@@ -1,0 +1,42 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Define column names based on the dataset's structure
+column_names = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target']
+
+# Load dataset, assuming no header in the CSV and assigning custom column names
+df = pd.read_csv("Cleavland.csv", header=None, names=column_names)
+
+# a) Histogram
+# Objective: Show distribution of age
+plt.hist(df['age'], bins=15, edgecolor='black')
+plt.title("Histogram of Age")
+plt.xlabel("Age")
+plt.ylabel("Count")
+plt.show()
+
+# b) Pie Chart
+# Objective: Show male vs female proportion
+gender = df['sex'].value_counts()
+
+plt.pie(gender, labels=['Male', 'Female'], autopct='%1.1f%%')
+plt.title("Gender Distribution")
+plt.show()
+
+# c) Box Plot
+# Objective: Detect outliers in cholesterol
+sns.boxplot(y=df['chol'])
+plt.title("Box Plot of Cholesterol")
+plt.show()
+
+# d) Scatter Plot
+# Objective: Show relation between age and max heart rate
+sns.scatterplot(x='age', y='thalach', hue='target', data=df)
+plt.title("Age vs Thalach")
+plt.show()
+
+# e) Scatter Plot with Boxplots
+# Objective: Show relationship and distribution together
+sns.jointplot(data=df, x='age', y='thalach', kind='scatter')
+plt.show()

@@ -1,0 +1,91 @@
+HBase Commands
+
+Start HBase shell:
+
+hbase shell
+
+Create Table
+
+create 'flight','finfo','fsch'
+
+Insert Data
+
+put 'flight','1','finfo:source','mumbai'
+put 'flight','1','finfo:dest','pune'
+put 'flight','1','fsch:delay',30
+put 'flight','2','finfo:source','nashik'
+put 'flight','2','finfo:dest','satana'
+put 'flight','2','fsch:delay',60
+
+View Data
+
+scan 'flight'
+
+Alter Table (Add Column Family)
+
+alter 'flight', NAME=>'revenue'
+
+Delete Record
+
+delete 'flight','1','fsch:delay'
+
+Drop Table
+
+disable 'flight'
+drop 'flight'
+
+⸻
+
+Hive Commands
+
+Start Hive:
+
+hive
+
+Create External Hive Table
+
+create external table hbase_flight(
+id int,
+source string,
+dest string,
+delay int)
+stored by 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+with serdeproperties(
+"hbase.columns.mapping"=
+":key,finfo:source,finfo:dest,fsch:delay")
+tblproperties("hbase.table.name"="flight");
+
+View Data
+
+select * from hbase_flight;
+
+Total Departure Delay
+
+select sum(delay) from hbase_flight;
+
+Result:
+
+30+60=90
+
+⸻
+
+Average Departure Delay
+
+select avg(delay) from hbase_flight;
+
+Result:
+
+\frac{30+60}{2}=45
+
+⸻
+
+Create Index
+
+create index flight_index
+on table hbase_flight(delay)
+as 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler'
+with deferred rebuild;
+
+Show Index
+
+show index on hbase_flight;

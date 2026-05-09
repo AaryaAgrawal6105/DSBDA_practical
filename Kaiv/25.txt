@@ -1,0 +1,78 @@
+import pandas as pd
+
+# Define column names based on the UCI Hepatitis dataset description
+column_names = [
+    'class', 'age', 'sex', 'steroid', 'antivirals', 'fatigue', 'malaise',
+    'anorexia', 'big_liver', 'firm_liver', 'spleen_palpable', 'spiders',
+    'ascites', 'varices', 'bilirubin', 'alk_phosphate', 'sgot', 'albumin',
+    'protime', 'histology'
+]
+
+# Load dataset with no header and specify '?' as NaN values
+df = pd.read_csv("hepatitis.csv", header=None, na_values='?')
+
+# Assign column names to the DataFrame
+df.columns = column_names
+
+# The original 'sex' column uses 1 for male and 2 for female. Map these to strings.
+df['sex'] = df['sex'].map({1: 'male', 2: 'female'})
+
+# Ensure relevant columns are numeric where expected
+# The dataset sometimes has '?' for numeric columns, which is handled by na_values
+# Convert relevant columns to numeric, coercing errors will turn unconvertible values into NaN
+for col in ['age', 'bilirubin', 'alk_phosphate', 'sgot', 'albumin', 'protime']:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+# a) Create subsets by sex
+# Objective: Separate male and female records
+
+male_df = df[df['sex'] == 'male']
+female_df = df[df['sex'] == 'female']
+
+print("Male records:")
+print(male_df.head())
+print("\nFemale records:")
+print(female_df.head())
+
+# b) Merge two subsets
+# Objective: Combine male and female data
+
+merged = pd.concat([male_df, female_df], ignore_index=True)
+print("\nMerged DataFrame:")
+print(merged.head())
+
+# c) Sort data
+# Objective: Sort using age, sgot and protime
+
+sorted_df = df.sort_values(by=['age', 'sgot', 'protime'])
+print("\nSorted DataFrame:")
+print(sorted_df.head())
+
+# d) Transpose data
+# Objective: Convert rows into columns
+
+transpose = df.T
+print("\nTransposed DataFrame:")
+print(transpose.head())
+
+# e) Melt data to long format
+# Objective: Convert wide data into long format
+
+melted = pd.melt(df,
+                 id_vars=['age', 'sex'],
+                 var_name='Attribute',
+                 value_name='Value')
+
+print("\nMelted DataFrame:")
+print(melted.head())
+
+# f) Cast data to wide format
+# Objective: Convert long format back to wide format
+
+wide = melted.pivot_table(index=['age', 'sex'],
+                          columns='Attribute',
+                          values='Value',
+                          aggfunc='first').reset_index()
+
+print("\nWide DataFrame:")
+print(wide.head())

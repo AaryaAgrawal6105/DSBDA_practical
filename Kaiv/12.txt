@@ -1,0 +1,72 @@
+import pandas as pd
+
+# Define column names based on the Adult dataset description
+cols = ['age', 'workclass', 'fnlwgt', 'education', 'education-num',
+        'marital-status', 'occupation', 'relationship', 'race', 'sex',
+        'capital-gain', 'capital-loss', 'hours-per-week', 'native-country', 'salary']
+
+# Load dataset with no header and assign column names
+df = pd.read_csv(
+    "adult.csv",
+    na_values='?',
+    skipinitialspace=True,
+    header=None # Specify no header
+)
+df.columns = cols # Assign column names
+
+# Remove missing values and duplicates
+df.dropna(inplace=True)
+df.drop_duplicates(inplace=True)
+
+# Group by country and race
+country_groups = dict(tuple(df.groupby('native-country')))
+race_groups = dict(tuple(df.groupby('race')))
+
+# Display first country group
+for country, group in list(country_groups.items())[:3]:
+    print("\nCountry:", country)
+    print(group.head(1))
+
+# Create subsets
+india_df = df[df['native-country'] == 'India']
+usa_df = df[df['native-country'] == 'United-States']
+
+# Merge subsets
+merged = pd.concat([india_df, usa_df], ignore_index=True)
+
+# Sort data
+sorted_df = df.sort_values(by='hours-per-week', ascending=False)
+
+# Transpose
+transpose = df.T
+
+# Melt data (Long format)
+melted = pd.melt(
+    df,
+    id_vars=['age', 'sex', 'race', 'occupation'], # Changed 'gender' to 'sex'
+    value_vars=['capital-gain', 'capital-loss'],
+    var_name='capital_type',
+    value_name='amount'
+)
+
+# Convert to numeric
+melted['amount'] = pd.to_numeric(melted['amount'], errors='coerce')
+
+# Pivot table (Wide format)
+casted = pd.pivot_table(
+    melted,
+    index=['age', 'sex', 'race', 'occupation'], # Changed 'gender' to 'sex'
+    columns='capital_type',
+    values='amount',
+    aggfunc='mean'
+).reset_index()
+
+# Output
+print("\nMerged Data:")
+print(merged.head())
+
+print("\nSorted Data:")
+print(sorted_df.head())
+
+print("\nPivot Table:")
+print(casted.head())

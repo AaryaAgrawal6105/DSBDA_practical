@@ -1,0 +1,62 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np # Import numpy for NaN
+
+# Define column names for the dataset (Cleveland Heart Disease dataset)
+column_names = [
+    'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach',
+    'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target'
+]
+
+# Load dataset, explicitly setting no header and providing column names
+df = pd.read_csv("Cleavland.csv", header=None, names=column_names)
+
+# Replace '?' with NaN and convert relevant columns to numeric
+# The original dataset often uses '?' for missing values in 'ca' and 'thal'
+df = df.replace('?', np.nan)
+
+# Convert columns that should be numeric
+# 'ca' and 'thal' are often read as objects due to '?'
+# 'target' can also be read as object if it has non-numeric representation
+numeric_cols = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak', 'ca', 'thal', 'target']
+for col in numeric_cols:
+    # errors='coerce' will turn non-convertible values (like original '?') into NaN
+    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+# a) Histogram
+# Objective: Show distribution of age
+plt.hist(df['age'], bins=15, edgecolor='black')
+plt.title("Histogram of Age")
+plt.xlabel("Age")
+plt.ylabel("Count")
+plt.show()
+
+# b) Dot Plot
+# Objective: Show age values for heart disease target
+sns.stripplot(x=df['target'], y=df['age'])
+plt.title("Dot Plot: Target vs Age")
+plt.show()
+
+# c) Bar Plot
+# Objective: Compare male and female count
+df['sex'].value_counts().plot(kind='bar')
+plt.title("Bar Plot of Sex")
+plt.xlabel("0 = Female, 1 = Male")
+plt.ylabel("Count")
+plt.show()
+
+# d) Line Chart
+# Objective: Show relation between age and max heart rate
+df = df.sort_values('age')
+
+plt.plot(df['age'], df['thalach'])
+plt.title("Line Chart: Age vs Thalach")
+plt.xlabel("Age")
+plt.ylabel("Max Heart Rate")
+plt.show()
+
+# e) Scatter + Histogram + Box Plot
+# Objective: Show distribution and relationship of age and cholesterol
+sns.jointplot(data=df, x='age', y='chol', kind='scatter')
+plt.show()

@@ -1,0 +1,154 @@
+Hive Commands
+
+Start Hive:
+
+hive
+
+⸻
+
+Create and Load Table
+
+create table OnlineRetail(
+InvoiceNo string,
+StockCode string,
+Description string,
+Quantity int,
+UnitPrice double,
+CustomerID int,
+Country string)
+row format delimited
+fields terminated by ',';
+load data local inpath '/home/cloudera/onlineRetail.csv'
+into table OnlineRetail;
+
+⸻
+
+Create Index
+
+create index olindex
+on table OnlineRetail(InvoiceNo)
+as 'compact'
+with deferred rebuild;
+
+⸻
+
+Total and Average Sales
+
+select
+sum(Quantity*UnitPrice) as total,
+avg(Quantity*UnitPrice) as average
+from OnlineRetail;
+
+Results:
+
+\text{Total Sales}=143.66
+
+\text{Average Sales}=14.366
+
+⸻
+
+Order with Maximum Cost
+
+select InvoiceNo,
+sum(Quantity*UnitPrice) as totalcost
+from OnlineRetail
+group by InvoiceNo
+order by totalcost desc
+limit 1;
+
+Result:
+
+536371=31.0
+
+⸻
+
+Customer with Maximum Order Total
+
+select CustomerID,
+sum(Quantity*UnitPrice) as totalcost
+from OnlineRetail
+group by CustomerID
+order by totalcost desc
+limit 1;
+
+Result:
+
+17856=31.0
+
+⸻
+
+Country with Maximum Sale
+
+select Country,
+sum(Quantity*UnitPrice) as totalsale
+from OnlineRetail
+group by Country
+order by totalsale desc
+limit 1;
+
+Result:
+
+\text{United Kingdom}=70.7
+
+⸻
+
+Country with Minimum Sale
+
+select Country,
+sum(Quantity*UnitPrice) as totalsale
+from OnlineRetail
+group by Country
+order by totalsale asc
+limit 1;
+
+Result:
+
+\text{France}=31.47
+
+⸻
+
+HBase Commands
+
+Start HBase:
+
+hbase shell
+
+⸻
+
+Create HBase Table
+
+create 'OnlineRetailRecords','OnlineRetail'
+
+⸻
+
+Create External Hive-HBase Table
+
+create external table OnlineRetailHbase(
+InvoiceNo string,
+StockCode string,
+Description string,
+Quantity int,
+UnitPrice double,
+CustomerID int,
+Country string)
+stored by 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+with serdeproperties(
+"hbase.columns.mapping"=
+":key,OnlineRetail:stock_code,OnlineRetail:description,
+OnlineRetail:quantity,OnlineRetail:unitprice,
+OnlineRetail:custID,OnlineRetail:country")
+tblproperties("hbase.table.name"="OnlineRetailRecords");
+
+⸻
+
+Insert Data into HBase
+
+insert into OnlineRetailHbase
+select * from OnlineRetail;
+
+⸻
+
+Display HBase Records
+
+list
+scan 'OnlineRetailRecords'

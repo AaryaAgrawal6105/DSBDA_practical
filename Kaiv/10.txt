@@ -1,0 +1,47 @@
+import pandas as pd
+
+# Read dataset, assuming no header and providing column names
+df = pd.read_csv("Iris.csv", header=None, names=['sepal.length', 'sepal.width', 'petal.length', 'petal.width', 'variety'])
+
+# Filter varieties
+setosa = df[df['variety'] == 'Iris-setosa']
+versicolor = df[df['variety'] == 'Iris-versicolor']
+
+# Merge
+merged_df = pd.concat([setosa, versicolor])
+
+# Sort
+sorted_df = df.sort_values(by='petal.length')
+
+# Transpose
+transposed_df = df.T
+
+# Melt
+melted_df = pd.melt(
+    df,
+    id_vars=['variety'],
+    var_name='features',
+    value_name='value'
+)
+
+# Pivot
+wide_df = melted_df.pivot_table(
+    index='variety',
+    columns='features',
+    values='value',
+    aggfunc='mean'
+)
+
+# Output
+print("Setosa Head:")
+print(setosa.head())
+print("\nMerged DataFrame Head:")
+print(merged_df.head())
+print("\nSorted DataFrame Head:")
+print(sorted_df.head())
+print("\nTransposed DataFrame Head:")
+print(transposed_df.head())
+print("\nMelted DataFrame Head:")
+print(melted_df.head())
+print("\nWide DataFrame Head:")
+print(wide_df.head())
