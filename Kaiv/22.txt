@@ -1,0 +1,46 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Define column names based on the adult.csv dataset structure (no header row)
+column_names = [
+    'age', 'workclass', 'fnlwgt', 'education', 'education-num', 'marital-status',
+    'occupation', 'relationship', 'race', 'sex', 'capital-gain', 'capital-loss',
+    'hours-per-week', 'native-country', 'income'
+]
+
+# Load dataset, specifying no header and providing column names
+df = pd.read_csv("adult.csv", header=None, names=column_names)
+
+# a) Histogram
+# Objective: Show age distribution
+sns.histplot(df['age'], bins=20, kde=True)
+plt.title("Histogram of Age")
+plt.show()
+
+# b) Pie Chart
+# Objective: Show income category proportion
+income = df['income'].value_counts()
+
+plt.pie(income, labels=income.index, autopct='%1.1f%%')
+plt.title("Income Distribution")
+plt.show()
+
+# c) Box Plot
+# Objective: Compare age by income category
+sns.boxplot(x='income', y='age', data=df)
+plt.title("Box Plot: Age vs Income")
+plt.show()
+
+# d) Scatter Plot
+# Objective: Show relation between age and working hours
+sns.scatterplot(x='age', y='hours-per-week', hue='income', data=df)
+plt.title("Age vs Working Hours")
+plt.show()
+
+# e) Boxplot + Scatter
+# Objective: Show distribution and individual points together
+sns.boxplot(x='income', y='hours-per-week', data=df)
+sns.stripplot(x='income', y='hours-per-week', data=df, color='black')
+plt.title("Boxplot with Scatter")
+plt.show()

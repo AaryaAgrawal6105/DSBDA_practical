@@ -1,0 +1,92 @@
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class music {
+
+    // Mapper
+    public static class MyMapper extends Mapper<LongWritable, Text, Text, Text> {
+
+        public void map(LongWritable key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            String line = value.toString();
+
+            // Skip header
+            if (line.contains("UserId")) {
+                return;
+            }
+
+            String[] data = line.split(",");
+
+            // check columns
+            if (data.length < 5) {
+                return;
+            }
+
+            String trackId = data[1];
+            String radio = data[3];
+            String skip = data[4];
+
+            // send trackId as key
+            context.write(new Text(trackId),
+                    new Text(radio + "," + skip));
+        }
+    }
+
+    // Reducer
+    public static class MyReducer extends Reducer<Text, Text, Text, Text> {
+
+        public void reduce(Text key, Iterable<Text> values, Context context)
+                throws IOException, InterruptedException {
+
+            int radioCount = 0;
+            int skipCount = 0;
+
+            for (Text val : values) {
+
+                String[] parts = val.toString().split(",");
+
+                int radio = Integer.parseInt(parts[0]);
+                int skip = Integer.parseInt(parts[1]);
+
+                radioCount += radio;
+                skipCount += skip;
+            }
+
+            String result = "Radio Count = " + radioCount
+                    + " , Skip Count = " + skipCount;
+
+            context.write(key, new Text(result));
+        }
+    }
+
+    // Driver
+    public static void main(String[] args) throws Exception {
+
+        Configuration conf = new Configuration();
+
+        Job job = new Job(conf, "Music Radio Skip");
+
+        job.setJarByClass(music.class);
+
+        job.setMapperClass(MyMapper.class);
+        job.setReducerClass(MyReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}

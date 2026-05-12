@@ -1,0 +1,43 @@
+import pandas as pd
+
+# Load dataset
+data = pd.read_csv("dataset_Facebook.csv", sep=';')
+
+# Filter data
+photo_posts = data[data['Type'] == 'Photo']
+status_posts = data[data['Type'] == 'Status']
+
+# Merge
+merged_data = pd.concat([photo_posts, status_posts])
+
+# Sort
+sorted_data = merged_data.sort_values(
+    by='Page total likes',
+    ascending=False
+)
+
+# Transpose
+transposed_data = sorted_data.T
+
+# Melt
+melted_data = pd.melt(
+    data,
+    id_vars=['Type', 'Category'],
+    value_vars=['like', 'share', 'comment']
+)
+
+# Pivot
+wide_data = melted_data.pivot_table(
+    index=['Type', 'Category'],
+    columns='variable',
+    values='value',
+    aggfunc='sum'
+)
+
+# Output
+print(photo_posts.head())
+print(merged_data.head())
+print(sorted_data.head())
+print(transposed_data.head())
+print(melted_data.head())
+print(wide_data.head())

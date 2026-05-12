@@ -1,0 +1,108 @@
+import pandas as pd
+
+# Define column names
+column_names = [
+    'class',
+    'age',
+    'sex',
+    'steroid',
+    'antivirals',
+    'fatigue',
+    'malaise',
+    'anorexia',
+    'big_liver',
+    'firm_liver',
+    'spleen_palpable',
+    'spiders',
+    'ascites',
+    'varices',
+    'bilirubin',
+    'alk_phosphate',
+    'sgot',
+    'albumin',
+    'protime',
+    'histology'
+]
+
+# Load dataset
+df = pd.read_csv(
+    "hepatitis.csv",
+    header=None,
+    names=column_names,
+    na_values='?'
+)
+
+# Transform sex column
+df['sex'] = df['sex'].map({
+    1: 'male',
+    2: 'female'
+})
+
+# Convert numeric columns
+num_cols = [
+    'age',
+    'bilirubin',
+    'alk_phosphate',
+    'sgot',
+    'albumin',
+    'protime'
+]
+
+for col in num_cols:
+    df[col] = pd.to_numeric(
+        df[col],
+        errors='coerce'
+    )
+
+# Filter data
+male_df = df[df['sex'] == 'male']
+
+female_df = df[df['sex'] == 'female']
+
+# Merge
+merged_df = pd.concat(
+    [male_df, female_df]
+)
+
+# Sort
+sorted_df = df.sort_values(
+    by=['age', 'sgot', 'protime']
+)
+
+# Transpose
+transposed_df = df.T
+
+# Melt
+melted_df = pd.melt(
+    df,
+    id_vars=['age', 'sex'],
+    var_name='Attribute',
+    value_name='Value'
+)
+
+# Pivot
+wide_df = melted_df.pivot_table(
+    index=['age', 'sex'],
+    columns='Attribute',
+    values='Value',
+    aggfunc='first'
+).reset_index()
+
+# Output
+print("Male Data Head:")
+print(male_df.head())
+
+print("\nMerged DataFrame Head:")
+print(merged_df.head())
+
+print("\nSorted DataFrame Head:")
+print(sorted_df.head())
+
+print("\nTransposed DataFrame Head:")
+print(transposed_df.head())
+
+print("\nMelted DataFrame Head:")
+print(melted_df.head())
+
+print("\nWide DataFrame Head:")
+print(wide_df.head())

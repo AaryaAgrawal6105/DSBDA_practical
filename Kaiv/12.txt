@@ -1,0 +1,74 @@
+import pandas as pd
+
+# Read dataset with column names
+cols = ['age', 'workclass', 'fnlwgt', 'education', 'education-num',
+        'marital-status', 'occupation', 'relationship', 'race', 'sex',
+        'capital-gain', 'capital-loss', 'hours-per-week',
+        'native-country', 'salary']
+
+df = pd.read_csv(
+    "adult.csv",
+    header=None,
+    names=cols,
+    na_values='?',
+    skipinitialspace=True
+)
+
+# Remove missing values and duplicates
+df.dropna(inplace=True)
+df.drop_duplicates(inplace=True)
+
+# Filter countries
+india_df = df[df['native-country'] == 'India']
+usa_df = df[df['native-country'] == 'United-States']
+
+# Merge
+merged_df = pd.concat([india_df, usa_df])
+
+# Sort
+sorted_df = df.sort_values(by='hours-per-week')
+
+# Transpose
+transposed_df = df.T
+
+# Melt
+melted_df = pd.melt(
+    df,
+    id_vars=['age', 'sex', 'race', 'occupation'],
+    value_vars=['capital-gain', 'capital-loss'],
+    var_name='capital_type',
+    value_name='amount'
+)
+
+# Convert to numeric
+melted_df['amount'] = pd.to_numeric(
+    melted_df['amount'],
+    errors='coerce'
+)
+
+# Pivot
+wide_df = melted_df.pivot_table(
+    index=['sex', 'race'],
+    columns='capital_type',
+    values='amount',
+    aggfunc='mean'
+)
+
+# Output
+print("India Data Head:")
+print(india_df.head())
+
+print("\nMerged DataFrame Head:")
+print(merged_df.head())
+
+print("\nSorted DataFrame Head:")
+print(sorted_df.head())
+
+print("\nTransposed DataFrame Head:")
+print(transposed_df.head())
+
+print("\nMelted DataFrame Head:")
+print(melted_df.head())
+
+print("\nWide DataFrame Head:")
+print(wide_df.head())

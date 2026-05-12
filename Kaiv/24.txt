@@ -1,0 +1,70 @@
+import pandas as pd
+
+# Load dataset
+df = pd.read_csv("forestfires.csv")
+
+# Create subsets
+def classify(area):
+
+    if area == 0:
+        return "NotAffected"
+
+    elif area <= 10:
+        return "PartiallyAffected"
+
+    else:
+        return "MostlyAffected"
+
+df['class'] = df['area'].apply(classify)
+
+not_affected = df[df['class'] == 'NotAffected']
+
+partial = df[df['class'] == 'PartiallyAffected']
+
+mostly = df[df['class'] == 'MostlyAffected']
+
+# Merge
+merged_df = pd.concat([not_affected, partial])
+
+# Sort
+sorted_df = df.sort_values(
+    by=['temp', 'wind', 'area']
+)
+
+# Transpose
+transposed_df = df.T
+
+# Melt
+melted_df = pd.melt(
+    df,
+    id_vars=['X', 'Y', 'month', 'day'],
+    var_name='Variable',
+    value_name='Value'
+)
+
+# Pivot
+wide_df = melted_df.pivot_table(
+    index=['X', 'Y', 'month', 'day'],
+    columns='Variable',
+    values='Value',
+    aggfunc='first'
+).reset_index()
+
+# Output
+print("Not Affected Head:")
+print(not_affected.head())
+
+print("\nMerged DataFrame Head:")
+print(merged_df.head())
+
+print("\nSorted DataFrame Head:")
+print(sorted_df.head())
+
+print("\nTransposed DataFrame Head:")
+print(transposed_df.head())
+
+print("\nMelted DataFrame Head:")
+print(melted_df.head())
+
+print("\nWide DataFrame Head:")
+print(wide_df.head())
