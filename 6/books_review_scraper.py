@@ -1,0 +1,26 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+URL = "https://books.toscrape.com/"
+
+# 1. Fetch & parse
+soup = BeautifulSoup(requests.get(URL).text, "html.parser")
+
+# 2. Loop books and build rows
+rows = []
+for b in soup.find_all("article", class_="product_pod"):
+    rating = b.find("p", class_="star-rating")["class"][1]   # e.g. "Three"
+    rows.append({
+        "Customer Name": b.find("h3").find("a")["title"],
+        "Rating":        f"{rating} stars",
+        "Comment":       b.find("p", class_="instock availability").text.strip(),
+        "Comment Tags":  rating,
+        "Price":         b.find("p", class_="price_color").text.strip()
+    })
+
+# 3. Save
+df = pd.DataFrame(rows)
+df.to_csv("books_reviews.csv", index=False)
+print(df)
+print("\nSaved", len(df), "books")

@@ -12,25 +12,20 @@ import org.apache.hadoop.util.*;
 public class LogTime {
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		String[] files = new GenericOptionsParser(conf, args).getRemainingArgs();
 
-		Path input = new Path(files[0]);
-		Path output = new Path(files[1]);
+        Job job = new Job(conf, "Maximum Login Time");
 
-		Job job = Job.getInstance(conf, "Log Time");
+        job.setJarByClass(LogTime.class);
 
-		job.setJarByClass(LogTime.class);
+        job.setMapperClass(LogMapper.class);
+        job.setReducerClass(LogReducer.class);
 
-		FileInputFormat.setInputPaths(job, input);
-		FileOutputFormat.setOutputPath(job, output);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
-		job.setMapperClass(LogMapper.class);
-		job.setReducerClass(LogReducer.class);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
-
-		boolean success = job.waitForCompletion(true);
-		System.exit(success ? 0 : 1);
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 }

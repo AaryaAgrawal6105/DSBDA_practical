@@ -12,25 +12,22 @@ import org.apache.hadoop.util.*;
 public class MovieRecommend {
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		String[] files = new GenericOptionsParser(conf, args).getRemainingArgs();
 
-		Path input = new Path(files[0]);
-		Path output = new Path(files[1]);
+	;
 
-		Job job = Job.getInstance(conf, "Movie Rating Average");
+		Job job = new Job(conf , "movie rating average");
 
 		job.setJarByClass(MovieRecommend.class);
-
-		FileInputFormat.setInputPaths(job, input);
-		FileOutputFormat.setOutputPath(job, output);
-
+		
 		job.setMapperClass(MovieMapper.class);
 		job.setReducerClass(MovieReducer.class);
-
+		
 		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(FloatWritable.class);
+		
+				FileInputFormat.addInputPath(job, new Path(args[0]));
+				FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-		boolean success = job.waitForCompletion(true);
-		System.exit(success ? 0 : 1);
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 }

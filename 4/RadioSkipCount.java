@@ -12,25 +12,20 @@ import org.apache.hadoop.util.*;
 public class RadioSkipCount {
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		String[] files = new GenericOptionsParser(conf, args).getRemainingArgs();
 
-		Path input = new Path(files[0]);
-		Path output = new Path(files[1]);
-
-		Job job = Job.getInstance(conf, "Radio and Skip Counter");
-
+		Job job = new Job(conf , "radio skip count");
 		job.setJarByClass(RadioSkipCount.class);
 
-		FileInputFormat.setInputPaths(job, input);
-		FileOutputFormat.setOutputPath(job, output);
-
+		
 		job.setMapperClass(RadioMapper.class);
 		job.setReducerClass(RadioReducer.class);
-
+		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
-
-		boolean success = job.waitForCompletion(true);
-		System.exit(success ? 0 : 1);
+		
+		FileInputFormat.addInputPath(job, new Path(args[0]));
+		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
 	}
 }

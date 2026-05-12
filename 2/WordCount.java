@@ -11,26 +11,22 @@ import org.apache.hadoop.util.*;
 
 public class WordCount {
 	public static void main(String[] args) throws Exception {
-		Configuration conf = new Configuration();
-		String[] files = new GenericOptionsParser(conf, args).getRemainingArgs();
+		 Configuration conf = new Configuration();
 
-		Path input = new Path(files[0]);
-		Path output = new Path(files[1]);
+        Job job = new Job(conf, "Word Count");
 
-		Job job = Job.getInstance(conf, "WordCount");
+        job.setJarByClass(WordCount.class);
 
-		job.setJarByClass(WordCount.class);
+        job.setMapperClass(WordMapper.class);
+        job.setReducerClass(WordReducer.class);
 
-		FileInputFormat.setInputPaths(job, input);
-		FileOutputFormat.setOutputPath(job, output);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
-		job.setMapperClass(WordMapper.class);
-		job.setReducerClass(WordReducer.class);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
 
-		boolean success = job.waitForCompletion(true);
-		System.exit(success ? 0 : 1);
 	}
 }
