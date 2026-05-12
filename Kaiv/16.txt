@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score, classification_report
@@ -32,27 +32,34 @@ df = pd.read_csv(
     names=column_names
 )
 
-# Data Cleaning
+# ---------------- DATA CLEANING ----------------
+
+# Replace ? with NaN
 df.replace('?', np.nan, inplace=True)
 
+# Remove missing values
 df.dropna(inplace=True)
 
-# Remove negative values
+# Numeric columns
 num_cols = [
     'age',
     'fnlwgt',
+    'education-num',
     'capital-gain',
     'capital-loss',
     'hours-per-week'
 ]
 
+# Convert to numeric
 for col in num_cols:
-    df[col] = pd.to_numeric(df[col])
+    df[col] = pd.to_numeric(df[col], errors='coerce')
 
+# Remove negative values
 for col in num_cols:
     df = df[df[col] >= 0]
 
-# Remove outliers using IQR
+# ---------------- OUTLIER REMOVAL ----------------
+
 for col in num_cols:
 
     Q1 = df[col].quantile(0.25)
@@ -70,20 +77,27 @@ for col in num_cols:
         (df[col] <= upper)
     ]
 
-# Keep only numeric columns
-df = df.select_dtypes(include=np.number)
+# ---------------- DATA TRANSFORMATION ----------------
+
+# Encode categorical columns
+label_encoder = LabelEncoder()
+
+for col in df.columns:
+    if df[col].dtype == 'object':
+        df[col] = label_encoder.fit_transform(df[col])
 
 # Features and target
-X = df.drop('education-num', axis=1)
+X = df.drop('income', axis=1)
 
-y = df['education-num']
+y = df['income']
 
-# Data Transformation using StandardScaler
+# Feature scaling
 scaler = StandardScaler()
 
 X = scaler.fit_transform(X)
 
-# Train-test split
+# ---------------- TRAIN TEST SPLIT ----------------
+
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -91,30 +105,34 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42
 )
 
-# Logistic Regression
+# ---------------- LOGISTIC REGRESSION ----------------
+
 lr = LogisticRegression(max_iter=500)
 
 lr.fit(X_train, y_train)
 
 lr_pred = lr.predict(X_test)
 
-# Naive Bayes
+# ---------------- NAIVE BAYES ----------------
+
 nb = GaussianNB()
 
 nb.fit(X_train, y_train)
 
 nb_pred = nb.predict(X_test)
 
-# Accuracy
+# ---------------- ACCURACY ----------------
+
 print("Logistic Regression Accuracy:",
       accuracy_score(y_test, lr_pred))
 
 print("Naive Bayes Accuracy:",
       accuracy_score(y_test, nb_pred))
 
-# Reports
-print("\nLogistic Regression Report:\n",
-      classification_report(y_test, lr_pred))
+# ---------------- REPORTS ----------------
 
-print("\nNaive Bayes Report:\n",
-      classification_report(y_test, nb_pred))
+print("\nLogistic Regression Report:\n")
+print(classification_report(y_test, lr_pred))
+
+print("\nNaive Bayes Report:\n")
+print(classification_report(y_test, nb_pred))
