@@ -2,49 +2,101 @@ import pandas as pd
 import numpy as np
 
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report
 
 # Load dataset
-column_names = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target']
-df = pd.read_csv("Cleavland.csv", header=None, names=column_names)
+column_names = [
+    'age',
+    'sex',
+    'cp',
+    'trestbps',
+    'chol',
+    'fbs',
+    'restecg',
+    'thalach',
+    'exang',
+    'oldpeak',
+    'slope',
+    'ca',
+    'thal',
+    'target'
+]
 
-# Clean data
+df = pd.read_csv(
+    "Cleavland.csv",
+    header=None,
+    names=column_names
+)
+
+# Data Cleaning
 df.replace('?', np.nan, inplace=True)
-df = df.apply(pd.to_numeric, errors='coerce')
+
+df = df.apply(
+    pd.to_numeric,
+    errors='coerce'
+)
+
 df.dropna(inplace=True)
 
 # Remove outliers using IQR
-for col in ['age', 'trestbps', 'chol', 'thalach', 'oldpeak']:
-    Q1 = df[col].quantile(0.25)
-    Q3 = df[col].quantile(0.75)
-    IQR = Q3 - Q1
-    df = df[
-        (df[col] >= Q1 - 1.5 * IQR) &
-        (df[col] <= Q3 + 1.5 * IQR)
-    ]
+num_cols = [
+    'age',
+    'trestbps',
+    'chol',
+    'thalach',
+    'oldpeak'
+]
 
-# One-hot encoding
-df = pd.get_dummies(df, columns=['cp', 'thal', 'slope'], drop_first=True)
+for col in num_cols:
+
+    Q1 = df[col].quantile(0.25)
+
+    Q3 = df[col].quantile(0.75)
+
+    IQR = Q3 - Q1
+
+    lower = Q1 - 1.5 * IQR
+
+    upper = Q3 + 1.5 * IQR
+
+    df = df[
+        (df[col] >= lower) &
+        (df[col] <= upper)
+    ]
 
 # Features and target
 X = df.drop('target', axis=1)
+
 y = df['target']
+
+# Data Transformation using StandardScaler
+scaler = StandardScaler()
+
+X = scaler.fit_transform(X)
 
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
 )
 
 # Logistic Regression
-lr = LogisticRegression(max_iter=5000) # Increased max_iter to 5000
+lr = LogisticRegression(max_iter=5000)
+
 lr.fit(X_train, y_train)
+
 lr_pred = lr.predict(X_test)
 
 # KNN
 knn = KNeighborsClassifier(n_neighbors=5)
+
 knn.fit(X_train, y_train)
+
 knn_pred = knn.predict(X_test)
 
 # Accuracy
