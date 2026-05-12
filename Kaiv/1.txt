@@ -1,0 +1,102 @@
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class log {
+
+    // ---------------- MAPPER ----------------
+    public static class MyMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+
+        public void map(LongWritable key, Text value, Context context)
+                throws IOException, InterruptedException {
+
+            String line = value.toString();
+
+            // split using comma
+            String[] data = line.split(",");
+
+            // check column count
+            if (data.length < 8) {
+                return;
+            }
+
+            String user = data[1];
+
+            // login time column
+            String login = data[5];
+
+            // logout time column
+            String logout = data[7];
+
+            /*
+             login example:
+             1/6/2018 12:23
+            */
+
+            String loginTimeStr = login.split(" ")[1];
+            String logoutTimeStr = logout.split(" ")[1];
+
+            String[] loginParts = loginTimeStr.split(":");
+            String[] logoutParts = logoutTimeStr.split(":");
+
+            int loginHour = Integer.parseInt(loginParts[0]);
+            int loginMin = Integer.parseInt(loginParts[1]);
+
+            int logoutHour = Integer.parseInt(logoutParts[0]);
+            int logoutMin = Integer.parseInt(logoutParts[1]);
+
+            int loginTime = loginHour * 60 + loginMin;
+            int logoutTime = logoutHour * 60 + logoutMin;
+
+            int duration = logoutTime - loginTime;
+
+            context.write(new Text(user), new IntWritable(duration));
+        }
+    }
+
+    // ---------------- REDUCER ----------------
+    public static class MyReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
+
+        public void reduce(Text key, Iterable<IntWritable> values, Context context)
+                throws IOException, InterruptedException {
+
+            int total = 0;
+
+            for (IntWritable val : values) {
+                total += val.get();
+            }
+
+            context.write(key, new IntWritable(total));
+        }
+    }
+
+    // ---------------- DRIVER ----------------
+    public static void main(String[] args) throws Exception {
+
+        Configuration conf = new Configuration();
+
+        Job job = new Job(conf, "Maximum Login Time");
+
+        job.setJarByClass(log.class);
+
+        job.setMapperClass(MyMapper.class);
+        job.setReducerClass(MyReducer.class);
+
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
